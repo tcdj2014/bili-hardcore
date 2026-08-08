@@ -24,17 +24,17 @@ B 站硬核会员自动答题工具，利用 LLM 实现智能答题功能。
 
 **macOS / Linux:**
 ```bash
-curl -fsSL https://github.com/Karben233/bili-hardcore/releases/latest/download/install.sh | bash
+curl -fsSL https://github.com/tcdj2014/bili-hardcore/releases/latest/download/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://github.com/Karben233/bili-hardcore/releases/latest/download/install.ps1 | iex
+irm https://github.com/tcdj2014/bili-hardcore/releases/latest/download/install.ps1 | iex
 ```
 
 ### 手动下载
 
-前往 [Releases](https://github.com/Karben233/bili-hardcore/releases/latest) 下载对应平台的文件：
+前往 [Releases](https://github.com/tcdj2014/bili-hardcore/releases/latest) 下载对应平台的文件：
 
 | 平台 | 推荐文件 |
 |------|---------|
@@ -57,7 +57,7 @@ chmod +x bili-hardcore
 需要 Rust 1.88 及以上版本：
 
 ```bash
-git clone https://github.com/Karben233/bili-hardcore.git
+git clone https://github.com/tcdj2014/bili-hardcore.git
 cd bili-hardcore
 cargo build --release
 ./target/release/bili-hardcore

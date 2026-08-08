@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 $ErrorActionPreference = "Stop"
 
-$REPO = "Karben233/bili-hardcore"
+$REPO = "tcdj2014/bili-hardcore"
 $BINARY = "bili-hardcore.exe"
 $InstallDir = if ($env:INSTALL_DIR) { $env:INSTALL_DIR } else { "$env:LOCALAPPDATA\Programs\bili-hardcore" }
 

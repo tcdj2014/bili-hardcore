@@ -219,23 +219,23 @@ jobs:
 
             | 平台 Platform | 文件 File |
             |---------------|-----------|
-            | **macOS** (ARM64) | [darwin-arm64.tar.gz](https://github.com/Karben233/bili-hardcore/releases/download/${{ inputs.tag }}/bili-hardcore-${{ inputs.tag }}-darwin-arm64.tar.gz) |
-            | **Windows** (x64) | [windows-x64.zip](https://github.com/Karben233/bili-hardcore/releases/download/${{ inputs.tag }}/bili-hardcore-${{ inputs.tag }}-windows-x64.zip) |
-            | **Linux** (x64 musl) | [linux-x64-musl.tar.gz](https://github.com/Karben233/bili-hardcore/releases/download/${{ inputs.tag }}/bili-hardcore-${{ inputs.tag }}-linux-x64-musl.tar.gz) |
-            | **Linux** (x64 glibc) | [linux-x64.tar.gz](https://github.com/Karben233/bili-hardcore/releases/download/${{ inputs.tag }}/bili-hardcore-${{ inputs.tag }}-linux-x64.tar.gz) |
-            | **Linux** (ARM64 musl) | [linux-arm64-musl.tar.gz](https://github.com/Karben233/bili-hardcore/releases/download/${{ inputs.tag }}/bili-hardcore-${{ inputs.tag }}-linux-arm64-musl.tar.gz) |
-            | **Linux** (ARM64 glibc) | [linux-arm64.tar.gz](https://github.com/Karben233/bili-hardcore/releases/download/${{ inputs.tag }}/bili-hardcore-${{ inputs.tag }}-linux-arm64.tar.gz) |
+            | **macOS** (ARM64) | [darwin-arm64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/bili-hardcore-${{ inputs.tag }}-darwin-arm64.tar.gz) |
+            | **Windows** (x64) | [windows-x64.zip](https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/bili-hardcore-${{ inputs.tag }}-windows-x64.zip) |
+            | **Linux** (x64 musl) | [linux-x64-musl.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/bili-hardcore-${{ inputs.tag }}-linux-x64-musl.tar.gz) |
+            | **Linux** (x64 glibc) | [linux-x64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/bili-hardcore-${{ inputs.tag }}-linux-x64.tar.gz) |
+            | **Linux** (ARM64 musl) | [linux-arm64-musl.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/bili-hardcore-${{ inputs.tag }}-linux-arm64-musl.tar.gz) |
+            | **Linux** (ARM64 glibc) | [linux-arm64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/bili-hardcore-${{ inputs.tag }}-linux-arm64.tar.gz) |
 
             ### 🚀 快速安装 / Quick Install
 
             **macOS / Linux (one-liner):**
             ```bash
-            curl -fsSL https://github.com/Karben233/bili-hardcore/releases/latest/download/install.sh | bash
+            curl -fsSL https://github.com/${{ github.repository }}/releases/latest/download/install.sh | bash
             ```
 
             **Windows (PowerShell):**
             ```powershell
-            irm https://github.com/Karben233/bili-hardcore/releases/latest/download/install.ps1 | iex
+            irm https://github.com/${{ github.repository }}/releases/latest/download/install.ps1 | iex
             ```
 
             ### 💡 提示

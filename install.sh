@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="Karben233/bili-hardcore"
+REPO="tcdj2014/bili-hardcore"
 BINARY="bili-hardcore"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 

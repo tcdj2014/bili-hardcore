@@ -205,7 +205,7 @@ fn uninstall() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-const REPO: &str = "Karben233/bili-hardcore";
+const REPO: &str = "tcdj2014/bili-hardcore";
 
 /// 通过 GitHub API 获取最新 release 的 tag 名称
 async fn fetch_latest_tag_via_api(
@@ -243,7 +243,7 @@ async fn fetch_latest_tag_via_redirect(
 
     // 即使跟随了 redirect，也可以从最终 URL 中提取
     let final_url = resp.url().to_string();
-    // URL 格式: https://github.com/Karben233/bili-hardcore/releases/tag/v1.0.1-beta
+    // URL 格式: https://github.com/tcdj2014/bili-hardcore/releases/tag/v1.0.1-beta
     if let Some(tag) = final_url.rsplit('/').next().filter(|s| s.starts_with('v')) {
         return Ok(tag.to_string());
     }
