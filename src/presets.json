@@ -4,7 +4,7 @@
         "provider_name": "硅基流动",
         "config": {
             "format": "openai",
-            "base_url": "https://api.siliconflow.cn/v1/chat/completions",
+            "base_url": "https://api.siliconflow.cn/v1",
             "model": "deepseek-ai/DeepSeek-V4-Flash"
         }
     },
@@ -13,7 +13,7 @@
         "provider_name": "DeepSeek",
         "config": {
             "format": "openai",
-            "base_url": "https://api.deepseek.com/v1/chat/completions",
+            "base_url": "https://api.deepseek.com/v1",
             "model": "deepseek-v4-flash"
         }
     },
@@ -22,7 +22,7 @@
         "provider_name": "智谱",
         "config": {
             "format": "openai",
-            "base_url": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+            "base_url": "https://open.bigmodel.cn/api/paas/v4",
             "model": "glm-4.7"
         }
     },
@@ -31,17 +31,35 @@
         "provider_name": "OpenAI",
         "config": {
             "format": "openai",
-            "base_url": "https://api.openai.com/v1/chat/completions",
+            "base_url": "https://api.openai.com/v1",
             "model": "gpt-5.4-nano"
         }
     },
     {
-        "provider": "anthropic",
-        "provider_name": "Claude (Anthropic)",
+        "provider": "zai-anthropic",
+        "provider_name": "智谱 (Anthropic 兼容)",
         "config": {
             "format": "anthropic",
-            "base_url": "https://api.anthropic.com",
-            "model": "claude-sonnet-4-5"
+            "base_url": "https://open.bigmodel.cn/api/anthropic",
+            "model": "glm-4.7"
+        }
+    },
+    {
+        "provider": "deepseek-anthropic",
+        "provider_name": "DeepSeek (Anthropic 兼容)",
+        "config": {
+            "format": "anthropic",
+            "base_url": "https://api.deepseek.com/anthropic",
+            "model": "deepseek-v4-flash"
+        }
+    },
+    {
+        "provider": "qwen-anthropic",
+        "provider_name": "千问 (Anthropic 兼容)",
+        "config": {
+            "format": "anthropic",
+            "base_url": "https://dashscope.aliyuncs.com/compatible-mode",
+            "model": "qwen-plus"
         }
     }
 ]

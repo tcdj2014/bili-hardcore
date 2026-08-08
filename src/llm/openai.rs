@@ -78,7 +78,15 @@ impl OpenAiClient {
             body["reasoning_effort"] = serde_json::json!(effort);
         }
 
-        let url = self.base_url.clone();
+        // 自动补全 /chat/completions 端点：用户填到版本路径即可（如
+        // https://api.openai.com/v1 或智谱的 https://open.bigmodel.cn/api/paas/v4）。
+        // 不含版本号是因为各服务商版本前缀不统一（v1/v4 等），只补最后公共部分。
+        // 已含 /chat/completions 的不重复拼接。
+        let url = if self.base_url.ends_with("/chat/completions") {
+            self.base_url.clone()
+        } else {
+            format!("{}/chat/completions", self.base_url)
+        };
         let http = self.http.clone();
         let api_key = self.api_key.clone();
 

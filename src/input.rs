@@ -2,7 +2,7 @@ use crate::app::*;
 use crate::config::{self, ApiFormat, OpenAiConfig};
 use crossterm::event::{KeyCode, KeyModifiers};
 
-const PRESET_COUNT: usize = 5; // must match presets.json length
+const PRESET_COUNT: usize = 7; // must match presets.json length
 
 use crate::app::CaptchaFocus;
 
