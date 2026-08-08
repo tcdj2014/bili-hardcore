@@ -928,6 +928,8 @@ impl App {
                 | AppEvent::SubmitFail(_)
                 | AppEvent::QuizDone { .. }
                 | AppEvent::Fail(_) => return,
+                // 未列举的变体（如 LlmTestResult）穿透守卫，由下方主 match 处理
+                _ => {}
             }
         }
         match ev {
