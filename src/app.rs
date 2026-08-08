@@ -746,7 +746,8 @@ impl App {
         };
 
         // 固定样例题，categories 传空（build_quiz_prompt 会兜底为"未知"）
-        let prompt = "题目:大的反义词是什么?\n答案:[\"长\", \"宽\", \"小\", \"热\"]".to_string();
+        // 选一道无法直接给出文字答案的常识题，迫使模型输出选项序号
+        let prompt = "题目:B站的弹幕字体颜色默认是哪种?\n答案:[\"红色\", \"白色\", \"黑色\", \"蓝色\"]".to_string();
         let (llm_tx, mut llm_rx) = mpsc::unbounded_channel::<LlmChunk>();
         let tx = self.tx.clone();
         let token = CancellationToken::new();
@@ -779,7 +780,7 @@ impl App {
                         } else {
                             let _ = tx.send(AppEvent::LlmTestResult {
                                 ok: false,
-                                message: format!("模型回复无法解析为 1-4: {text}"),
+                                message: format!("模型回复无法解析为 1-4 序号: {text}"),
                             });
                         }
                         return;
