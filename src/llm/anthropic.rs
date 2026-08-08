@@ -74,7 +74,14 @@ impl AnthropicClient {
             });
         }
 
-        let url = self.base_url.clone();
+        // 自动补全 /v1/messages 端点：用户填根路径（如 https://api.anthropic.com 或
+        // 智谱的 https://open.bigmodel.cn/api/anthropic）即可，无需手动补全。
+        // 已含 /v1/messages 的不重复拼接。
+        let url = if self.base_url.ends_with("/v1/messages") {
+            self.base_url.clone()
+        } else {
+            format!("{}/v1/messages", self.base_url)
+        };
         let http = self.http.clone();
         let api_key = self.api_key.clone();
 
@@ -113,11 +120,13 @@ impl AnthropicClient {
             // 检查响应是否为 SSE 流。某些 Anthropic 兼容端点在 URL 错误或鉴权失败时
             // 会返回 HTTP 200 + JSON 错误体（content-type: application/json），
             // 而非 text/event-stream。此时按 SSE 解析会得到空内容，需显式报错。
+            // 用 owned String 断开对 resp 的借用，避免后续 resp.text()/bytes_stream() 时 E0505。
             let content_type = resp
                 .headers()
                 .get("content-type")
                 .and_then(|v| v.to_str().ok())
-                .unwrap_or("");
+                .unwrap_or("")
+                .to_string();
             if !content_type.contains("text/event-stream") {
                 let body_text = resp.text().await.unwrap_or_default();
                 let preview = &body_text[..body_text.len().min(300)];
