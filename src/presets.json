@@ -3,6 +3,7 @@
         "provider": "siliconflow",
         "provider_name": "硅基流动",
         "config": {
+            "format": "openai",
             "base_url": "https://api.siliconflow.cn/v1/chat/completions",
             "model": "deepseek-ai/DeepSeek-V4-Flash"
         }
@@ -11,6 +12,7 @@
         "provider": "deepseek",
         "provider_name": "DeepSeek",
         "config": {
+            "format": "openai",
             "base_url": "https://api.deepseek.com/v1/chat/completions",
             "model": "deepseek-v4-flash"
         }
@@ -19,6 +21,7 @@
         "provider": "zai",
         "provider_name": "智谱",
         "config": {
+            "format": "openai",
             "base_url": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
             "model": "glm-4.7"
         }
@@ -27,8 +30,18 @@
         "provider": "openai",
         "provider_name": "OpenAI",
         "config": {
+            "format": "openai",
             "base_url": "https://api.openai.com/v1/chat/completions",
             "model": "gpt-5.4-nano"
+        }
+    },
+    {
+        "provider": "anthropic",
+        "provider_name": "Claude (Anthropic)",
+        "config": {
+            "format": "anthropic",
+            "base_url": "https://api.anthropic.com/v1/messages",
+            "model": "claude-sonnet-4-5"
         }
     }
 ]

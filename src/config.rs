@@ -7,8 +7,19 @@ const CONFIG_DIR_NAME: &str = ".bili-hardcore";
 
 // --- Preset Templates ---
 
+/// API 协议格式：OpenAI 兼容（/v1/chat/completions）或 Anthropic（/v1/messages）
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum ApiFormat {
+    #[default]
+    OpenAi,
+    Anthropic,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PresetConfig {
+    #[serde(default, rename = "format")]
+    pub api_format: ApiFormat,
     pub base_url: String,
     pub model: String,
 }
@@ -38,6 +49,9 @@ pub struct OpenAiConfig {
     pub reasoning_effort: String,
     #[serde(default)]
     pub enable_fast_mode: bool,
+    /// API 协议格式，默认 OpenAI 兼容
+    #[serde(default)]
+    pub api_format: ApiFormat,
 }
 
 fn default_reasoning_effort() -> String {

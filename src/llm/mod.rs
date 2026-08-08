@@ -1,4 +1,5 @@
+pub mod anthropic;
 pub mod openai;
 
-pub use openai::LlmChunk;
-pub use openai::OpenAiClient;
+pub use anthropic::AnthropicClient;
+pub use openai::{LlmChunk, OpenAiClient};

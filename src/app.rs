@@ -1,5 +1,5 @@
 use crate::api::BiliClient;
-use crate::config::{self, AuthData, OpenAiConfig};
+use crate::config::{self, ApiFormat, AuthData, OpenAiConfig};
 use crate::llm::LlmChunk;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
@@ -26,6 +26,7 @@ pub enum ConfigFocus {
     BaseUrl,
     Model,
     ApiKey,
+    FormatToggle,
     ThinkingToggle,
     ThinkingEffort,
     FastModeToggle,
@@ -183,6 +184,7 @@ pub struct App {
     pub config_reset_choice: u8,
     pub cfg_preset_open: bool,
     pub cfg_preset_sel: usize,
+    pub cfg_format: ApiFormat,
 
     // Quiz state
     pub phase: QuizPhase,
@@ -295,6 +297,7 @@ impl App {
             config_reset_choice: 0,
             cfg_preset_open: false,
             cfg_preset_sel: 0,
+            cfg_format: config.as_ref().map_or(ApiFormat::OpenAi, |c| c.api_format),
             phase: QuizPhase::NotConfigured,
             score: 0,
             question_id: 0,
@@ -356,6 +359,7 @@ impl App {
         self.config_reset_choice = 0;
         self.cfg_preset_open = false;
         self.cfg_preset_sel = 0;
+        self.cfg_format = ApiFormat::OpenAi;
         self.back();
     }
 
@@ -629,7 +633,6 @@ impl App {
     pub fn spawn_llm(&self) {
         if let Some(ref cfg) = self.config {
             let token = self.quiz_token.clone();
-            let client = crate::llm::OpenAiClient::new(cfg);
             let prompt = format!(
                 "题目:{}\n答案:{:?}",
                 self.question_text,
@@ -645,11 +648,33 @@ impl App {
             );
             tracing::info!("LLM prompt:\n{}", full_prompt);
 
-            client.ask_stream(&prompt, self.selected_categories.clone(), llm_tx, token.clone());
+            // 按 API 协议格式分发到对应客户端，两者签名一致
+            match cfg.api_format {
+                crate::config::ApiFormat::OpenAi => {
+                    let client = crate::llm::OpenAiClient::new(cfg);
+                    client.ask_stream(
+                        &prompt,
+                        self.selected_categories.clone(),
+                        llm_tx,
+                        token.clone(),
+                    );
+                }
+                crate::config::ApiFormat::Anthropic => {
+                    let client = crate::llm::AnthropicClient::new(cfg);
+                    client.ask_stream(
+                        &prompt,
+                        self.selected_categories.clone(),
+                        llm_tx,
+                        token.clone(),
+                    );
+                }
+            }
 
             tokio::spawn(async move {
                 while let Some(chunk) = llm_rx.recv().await {
-                    if token.is_cancelled() { return; }
+                    if token.is_cancelled() {
+                        return;
+                    }
                     match chunk {
                         LlmChunk::Thinking(_) | LlmChunk::Content(_) => {
                             let _ = tx.send(AppEvent::LlmChunk(chunk));
@@ -958,7 +983,9 @@ impl App {
                     let tx = self.tx.clone();
                     tokio::spawn(async move {
                         tokio::time::sleep(std::time::Duration::from_secs(secs)).await;
-                        if ct.is_cancelled() { return; }
+                        if ct.is_cancelled() {
+                            return;
+                        }
                         let _ = tx.send(AppEvent::LlmRetryFire);
                     });
                 }

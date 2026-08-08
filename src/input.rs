@@ -1,8 +1,8 @@
 use crate::app::*;
-use crate::config::{self, OpenAiConfig};
+use crate::config::{self, ApiFormat, OpenAiConfig};
 use crossterm::event::{KeyCode, KeyModifiers};
 
-const PRESET_COUNT: usize = 4; // must match presets.json length
+const PRESET_COUNT: usize = 5; // must match presets.json length
 
 use crate::app::CaptchaFocus;
 
@@ -57,6 +57,7 @@ impl App {
                         self.cfg_fields[1] = preset.config.model.clone();
                         self.cfg_cursors[0] = self.cfg_fields[0].len();
                         self.cfg_cursors[1] = self.cfg_fields[1].len();
+                        self.cfg_format = preset.config.api_format;
                     }
                     self.cfg_preset_open = false;
                 }
@@ -94,7 +95,8 @@ impl App {
             ConfigFocus::BaseUrl => Some(0),
             ConfigFocus::Model => Some(1),
             ConfigFocus::ApiKey => Some(2),
-            ConfigFocus::ThinkingToggle
+            ConfigFocus::FormatToggle
+            | ConfigFocus::ThinkingToggle
             | ConfigFocus::ThinkingEffort
             | ConfigFocus::FastModeToggle
             | ConfigFocus::SaveBtn
@@ -110,6 +112,7 @@ impl App {
                     self.config_confirm_reset = true;
                     self.config_reset_choice = 0;
                 }
+                ConfigFocus::FormatToggle => self.toggle_format(),
                 ConfigFocus::ThinkingToggle => self.cfg_thinking = !self.cfg_thinking,
                 ConfigFocus::ThinkingEffort => self.cfg_effort = (self.cfg_effort + 1) % 3,
                 ConfigFocus::FastModeToggle => self.cfg_fast_mode = !self.cfg_fast_mode,
@@ -150,7 +153,8 @@ impl App {
                 self.cfg_focus = match self.cfg_focus {
                     ConfigFocus::BaseUrl => ConfigFocus::Model,
                     ConfigFocus::Model => ConfigFocus::ApiKey,
-                    ConfigFocus::ApiKey => ConfigFocus::ThinkingToggle,
+                    ConfigFocus::ApiKey => ConfigFocus::FormatToggle,
+                    ConfigFocus::FormatToggle => ConfigFocus::ThinkingToggle,
                     ConfigFocus::ThinkingToggle => {
                         if self.cfg_thinking {
                             ConfigFocus::ThinkingEffort
@@ -170,6 +174,7 @@ impl App {
                     ConfigFocus::BaseUrl => ConfigFocus::ResetBtn,
                     ConfigFocus::Model => ConfigFocus::BaseUrl,
                     ConfigFocus::ApiKey => ConfigFocus::Model,
+                    ConfigFocus::FormatToggle => ConfigFocus::ApiKey,
                     ConfigFocus::FastModeToggle => {
                         if self.cfg_thinking {
                             ConfigFocus::ThinkingEffort
@@ -178,18 +183,20 @@ impl App {
                         }
                     }
                     ConfigFocus::ThinkingEffort => ConfigFocus::ThinkingToggle,
-                    ConfigFocus::ThinkingToggle => ConfigFocus::ApiKey,
+                    ConfigFocus::ThinkingToggle => ConfigFocus::FormatToggle,
                     ConfigFocus::SaveBtn => ConfigFocus::FastModeToggle,
                     ConfigFocus::TemplateBtn => ConfigFocus::SaveBtn,
                     ConfigFocus::ResetBtn => ConfigFocus::TemplateBtn,
                 };
             }
             KeyCode::Char(' ')
-                if self.cfg_focus == ConfigFocus::ThinkingToggle
+                if self.cfg_focus == ConfigFocus::FormatToggle
+                    || self.cfg_focus == ConfigFocus::ThinkingToggle
                     || self.cfg_focus == ConfigFocus::ThinkingEffort
                     || self.cfg_focus == ConfigFocus::FastModeToggle =>
             {
                 match self.cfg_focus {
+                    ConfigFocus::FormatToggle => self.toggle_format(),
                     ConfigFocus::ThinkingToggle => self.cfg_thinking = !self.cfg_thinking,
                     ConfigFocus::ThinkingEffort => self.cfg_effort = (self.cfg_effort + 1) % 3,
                     ConfigFocus::FastModeToggle => self.cfg_fast_mode = !self.cfg_fast_mode,
@@ -432,6 +439,7 @@ impl App {
         let is_first_time = self.config.is_none();
         if let Some(ref c) = self.config {
             self.cfg_fields = [c.base_url.clone(), c.model.clone(), c.api_key.clone()];
+            self.cfg_format = c.api_format;
         }
         self.cfg_cursors = [
             self.cfg_fields[0].len(),
@@ -461,6 +469,7 @@ impl App {
             enable_thinking: self.cfg_thinking,
             reasoning_effort: ["low", "high", "max"][self.cfg_effort].to_string(),
             enable_fast_mode: self.cfg_fast_mode,
+            api_format: self.cfg_format,
         };
         let _ = crate::config::save_openai_config(&cfg).map_err(|e| tracing::error!("{}", e));
         self.config = Some(cfg);
@@ -469,6 +478,13 @@ impl App {
         if self.page == Page::Quiz {
             self.spawn_login();
         }
+    }
+
+    fn toggle_format(&mut self) {
+        self.cfg_format = match self.cfg_format {
+            ApiFormat::OpenAi => ApiFormat::Anthropic,
+            ApiFormat::Anthropic => ApiFormat::OpenAi,
+        };
     }
 
     fn enter_quiz(&mut self) {

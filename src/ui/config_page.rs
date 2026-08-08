@@ -1,20 +1,21 @@
 use crate::app::{App, ConfigFocus};
-use crate::config;
+use crate::config::{self, ApiFormat};
 use ratatui::style::{Color, Modifier, Style};
 
-const LABELS: [&str; 3] = ["API URL(Completions)", "模型名称", "API Key"];
+const LABELS: [&str; 3] = ["API URL", "模型名称", "API Key"];
 
 fn focus_index(focus: ConfigFocus) -> usize {
     match focus {
         ConfigFocus::BaseUrl => 0,
         ConfigFocus::Model => 1,
         ConfigFocus::ApiKey => 2,
-        ConfigFocus::ThinkingToggle => 3,
-        ConfigFocus::ThinkingEffort => 4,
-        ConfigFocus::FastModeToggle => 5,
-        ConfigFocus::SaveBtn => 6,
-        ConfigFocus::TemplateBtn => 7,
-        ConfigFocus::ResetBtn => 8,
+        ConfigFocus::FormatToggle => 3,
+        ConfigFocus::ThinkingToggle => 4,
+        ConfigFocus::ThinkingEffort => 5,
+        ConfigFocus::FastModeToggle => 6,
+        ConfigFocus::SaveBtn => 7,
+        ConfigFocus::TemplateBtn => 8,
+        ConfigFocus::ResetBtn => 9,
     }
 }
 
@@ -61,6 +62,7 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
         Constraint::Length(3), // BaseUrl
         Constraint::Length(3), // Model
         Constraint::Length(3), // ApiKey
+        Constraint::Length(3), // Format toggle
         Constraint::Length(3), // Thinking toggle
     ];
     if thinking_on {
@@ -78,8 +80,12 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
     let chunks = Layout::vertical(layout_constraints).split(inner);
     let effort_shift: usize = if thinking_on { 0 } else { 1 };
 
+    let header_text = match app.cfg_format {
+        ApiFormat::OpenAi => "请输入 OpenAI 兼容 API 配置信息",
+        ApiFormat::Anthropic => "请输入 Anthropic API 配置信息",
+    };
     f.render_widget(
-        Paragraph::new("请输入 OpenAI 兼容 API 配置信息")
+        Paragraph::new(header_text)
             .style(Style::default().fg(Color::Yellow))
             .alignment(Alignment::Center),
         chunks[0],
@@ -119,7 +125,35 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
         );
     }
 
-    // Thinking toggle (chunks[4])
+    // Format toggle (chunks[4])
+    let format_focused = app.cfg_focus == ConfigFocus::FormatToggle;
+    let format_border_color = if format_focused {
+        Color::Cyan
+    } else {
+        Color::DarkGray
+    };
+    let format_block = Block::default()
+        .borders(Borders::ALL)
+        .title(" API 格式 ")
+        .style(Style::default().fg(format_border_color));
+    let format_inner = format_block.inner(chunks[4]);
+    f.render_widget(format_block, chunks[4]);
+
+    let format_text = match app.cfg_format {
+        ApiFormat::OpenAi => "[✓] OpenAI 兼容    [ ] Anthropic (Claude)",
+        ApiFormat::Anthropic => "[ ] OpenAI 兼容    [✓] Anthropic (Claude)",
+    };
+    let format_color = if format_focused {
+        Color::White
+    } else {
+        Color::DarkGray
+    };
+    f.render_widget(
+        Paragraph::new(format_text).style(Style::default().fg(format_color)),
+        format_inner,
+    );
+
+    // Thinking toggle (chunks[5])
     let thinking_focused = app.cfg_focus == ConfigFocus::ThinkingToggle;
     let toggle_border_color = if thinking_focused {
         Color::Cyan
@@ -130,8 +164,8 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
         .borders(Borders::ALL)
         .title(" 思考模式 ")
         .style(Style::default().fg(toggle_border_color));
-    let toggle_inner = toggle_block.inner(chunks[4]);
-    f.render_widget(toggle_block, chunks[4]);
+    let toggle_inner = toggle_block.inner(chunks[5]);
+    f.render_widget(toggle_block, chunks[5]);
 
     let toggle_text = if app.cfg_thinking {
         "[✓] 开启 - 准确率高，速度慢"
@@ -148,7 +182,7 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
         toggle_inner,
     );
 
-    // Thinking effort selector (chunks[5], only when thinking is ON)
+    // Thinking effort selector (chunks[6], only when thinking is ON)
     if thinking_on {
         let effort_focused = app.cfg_focus == ConfigFocus::ThinkingEffort;
         let effort_border_color = if effort_focused {
@@ -160,8 +194,8 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
             .borders(Borders::ALL)
             .title(" 思考强度 ")
             .style(Style::default().fg(effort_border_color));
-        let effort_inner = effort_block.inner(chunks[5]);
-        f.render_widget(effort_block, chunks[5]);
+        let effort_inner = effort_block.inner(chunks[6]);
+        f.render_widget(effort_block, chunks[6]);
 
         const EFFORTS: [&str; 3] = ["低", "高", "最大"];
         let effort_text = EFFORTS
@@ -193,7 +227,7 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
     } else {
         Color::DarkGray
     };
-    let fast_chunk = &chunks[6 - effort_shift];
+    let fast_chunk = &chunks[7 - effort_shift];
     let fast_block = Block::default()
         .borders(Borders::ALL)
         .title(" 快速模式 ")
@@ -232,7 +266,7 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
         Paragraph::new(save_text)
             .style(save_style)
             .alignment(Alignment::Center),
-        chunks[7 - effort_shift],
+        chunks[8 - effort_shift],
     );
 
     // Template button
@@ -251,7 +285,7 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
         Paragraph::new(tpl_text)
             .style(tpl_style)
             .alignment(Alignment::Center),
-        chunks[8 - effort_shift],
+        chunks[9 - effort_shift],
     );
 
     // Reset button
@@ -270,14 +304,14 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
         Paragraph::new(reset_text)
             .style(reset_style)
             .alignment(Alignment::Center),
-        chunks[9 - effort_shift],
+        chunks[10 - effort_shift],
     );
 
     f.render_widget(
         Paragraph::new("↑↓ 切换  Space 勾选  Enter 确认  ESC 返回")
             .style(Style::default().fg(Color::DarkGray))
             .alignment(Alignment::Center),
-        chunks[11 - effort_shift],
+        chunks[12 - effort_shift],
     );
 }
 
