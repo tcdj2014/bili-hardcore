@@ -7,6 +7,14 @@ use tokio_util::sync::CancellationToken;
 
 // --- Pages ---
 
+/// 配置页"测试模型调用"的状态
+#[derive(Debug, Clone)]
+pub enum TestStatus {
+    Idle,
+    Testing,
+    Done { ok: bool, message: String },
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Page {
     Home,
@@ -33,6 +41,7 @@ pub enum ConfigFocus {
     SaveBtn,
     TemplateBtn,
     ResetBtn,
+    TestBtn,
 }
 
 #[derive(Debug, Clone)]
@@ -141,6 +150,8 @@ pub enum AppEvent {
         scores: Vec<ScoreItem>,
     },
     Fail(String),
+    /// 配置页测试模型调用的结果（不进入答题事件守卫，配置页可见）
+    LlmTestResult { ok: bool, message: String },
 }
 
 #[derive(Debug, Clone)]
@@ -185,6 +196,7 @@ pub struct App {
     pub cfg_preset_open: bool,
     pub cfg_preset_sel: usize,
     pub cfg_format: ApiFormat,
+    pub cfg_test_status: TestStatus,
 
     // Quiz state
     pub phase: QuizPhase,
@@ -298,6 +310,7 @@ impl App {
             cfg_preset_open: false,
             cfg_preset_sel: 0,
             cfg_format: config.as_ref().map_or(ApiFormat::OpenAi, |c| c.api_format),
+            cfg_test_status: TestStatus::Idle,
             phase: QuizPhase::NotConfigured,
             score: 0,
             question_id: 0,
@@ -360,6 +373,7 @@ impl App {
         self.cfg_preset_open = false;
         self.cfg_preset_sel = 0;
         self.cfg_format = ApiFormat::OpenAi;
+        self.cfg_test_status = TestStatus::Idle;
         self.back();
     }
 
@@ -701,6 +715,84 @@ impl App {
         }
     }
 
+    /// 配置页"测试模型调用"：用一道固定样例题验证连通性与模型格式。
+    /// 结果通过 AppEvent::LlmTestResult 回传（不进入答题事件守卫，配置页可见）。
+    pub fn spawn_test_llm(&mut self) {
+        self.cfg_test_status = TestStatus::Testing;
+
+        // 测试无需依赖已保存配置，直接用当前 cfg_fields 构造一份临时配置。
+        // 三项任一为空时直接判失败，避免发起必然失败的请求。
+        let base = self.cfg_fields[0].trim_end_matches('/').to_string();
+        let model = self.cfg_fields[1].clone();
+        let key = self.cfg_fields[2].clone();
+        if base.is_empty() || model.is_empty() || key.is_empty() {
+            self.cfg_test_status = TestStatus::Done {
+                ok: false,
+                message: "请先填写 URL、模型名和 API Key".into(),
+            };
+            return;
+        }
+        let cfg = OpenAiConfig {
+            base_url: base,
+            model,
+            api_key: key,
+            enable_thinking: self.cfg_thinking,
+            reasoning_effort: ["low", "high", "max"][self.cfg_effort].to_string(),
+            enable_fast_mode: self.cfg_fast_mode,
+            api_format: self.cfg_format,
+        };
+
+        // 固定样例题，categories 传空（build_quiz_prompt 会兜底为"未知"）
+        let prompt = "题目:大的反义词是什么?\n答案:[\"长\", \"宽\", \"小\", \"热\"]".to_string();
+        let (llm_tx, mut llm_rx) = mpsc::unbounded_channel::<LlmChunk>();
+        let tx = self.tx.clone();
+        let token = CancellationToken::new();
+
+        match cfg.api_format {
+            crate::config::ApiFormat::OpenAi => {
+                let client = crate::llm::OpenAiClient::new(&cfg);
+                client.ask_stream(&prompt, vec![], llm_tx, token.clone());
+            }
+            crate::config::ApiFormat::Anthropic => {
+                let client = crate::llm::AnthropicClient::new(&cfg);
+                client.ask_stream(&prompt, vec![], llm_tx, token.clone());
+            }
+        }
+
+        tokio::spawn(async move {
+            while let Some(chunk) = llm_rx.recv().await {
+                if token.is_cancelled() {
+                    return;
+                }
+                match chunk {
+                    // 忽略中间的思考/内容增量，只看最终结果
+                    LlmChunk::Thinking(_) | LlmChunk::Content(_) => {}
+                    LlmChunk::Done(text) => {
+                        if parse_answer(&text).is_some() {
+                            let _ = tx.send(AppEvent::LlmTestResult {
+                                ok: true,
+                                message: text,
+                            });
+                        } else {
+                            let _ = tx.send(AppEvent::LlmTestResult {
+                                ok: false,
+                                message: format!("模型回复无法解析为 1-4: {text}"),
+                            });
+                        }
+                        return;
+                    }
+                    LlmChunk::Error(msg) => {
+                        let _ = tx.send(AppEvent::LlmTestResult {
+                            ok: false,
+                            message: msg,
+                        });
+                        return;
+                    }
+                }
+            }
+        });
+    }
+
     pub fn spawn_submit(&self, ans_idx: usize) {
         if ans_idx == 0 || ans_idx > self.answers.len() {
             return;
@@ -1014,6 +1106,9 @@ impl App {
             }
             AppEvent::Fail(msg) => {
                 self.phase = QuizPhase::Error(msg);
+            }
+            AppEvent::LlmTestResult { ok, message } => {
+                self.cfg_test_status = TestStatus::Done { ok, message };
             }
         }
     }

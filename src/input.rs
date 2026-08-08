@@ -101,7 +101,8 @@ impl App {
             | ConfigFocus::FastModeToggle
             | ConfigFocus::SaveBtn
             | ConfigFocus::TemplateBtn
-            | ConfigFocus::ResetBtn => None,
+            | ConfigFocus::ResetBtn
+            | ConfigFocus::TestBtn => None,
         };
 
         match code {
@@ -120,6 +121,7 @@ impl App {
                     self.cfg_preset_open = true;
                     self.cfg_preset_sel = 0;
                 }
+                ConfigFocus::TestBtn => self.spawn_test_llm(),
                 _ => {}
             },
             KeyCode::Backspace => {
@@ -166,12 +168,13 @@ impl App {
                     ConfigFocus::FastModeToggle => ConfigFocus::SaveBtn,
                     ConfigFocus::SaveBtn => ConfigFocus::TemplateBtn,
                     ConfigFocus::TemplateBtn => ConfigFocus::ResetBtn,
-                    ConfigFocus::ResetBtn => ConfigFocus::BaseUrl,
+                    ConfigFocus::ResetBtn => ConfigFocus::TestBtn,
+                    ConfigFocus::TestBtn => ConfigFocus::BaseUrl,
                 };
             }
             KeyCode::Up => {
                 self.cfg_focus = match self.cfg_focus {
-                    ConfigFocus::BaseUrl => ConfigFocus::ResetBtn,
+                    ConfigFocus::BaseUrl => ConfigFocus::TestBtn,
                     ConfigFocus::Model => ConfigFocus::BaseUrl,
                     ConfigFocus::ApiKey => ConfigFocus::Model,
                     ConfigFocus::FormatToggle => ConfigFocus::ApiKey,
@@ -187,6 +190,7 @@ impl App {
                     ConfigFocus::SaveBtn => ConfigFocus::FastModeToggle,
                     ConfigFocus::TemplateBtn => ConfigFocus::SaveBtn,
                     ConfigFocus::ResetBtn => ConfigFocus::TemplateBtn,
+                    ConfigFocus::TestBtn => ConfigFocus::ResetBtn,
                 };
             }
             KeyCode::Char(' ')

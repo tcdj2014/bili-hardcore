@@ -1,4 +1,4 @@
-use crate::app::{App, ConfigFocus};
+use crate::app::{App, ConfigFocus, TestStatus};
 use crate::config::{self, ApiFormat};
 use ratatui::style::{Color, Modifier, Style};
 
@@ -16,6 +16,7 @@ fn focus_index(focus: ConfigFocus) -> usize {
         ConfigFocus::SaveBtn => 7,
         ConfigFocus::TemplateBtn => 8,
         ConfigFocus::ResetBtn => 9,
+        ConfigFocus::TestBtn => 10,
     }
 }
 
@@ -73,6 +74,8 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
         Constraint::Length(2), // Save
         Constraint::Length(2), // Template
         Constraint::Length(2), // Reset
+        Constraint::Length(2), // Test button
+        Constraint::Length(1), // Test status line
         Constraint::Min(1),    // spacer
         Constraint::Length(1), // help
     ]);
@@ -307,11 +310,57 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
         chunks[10 - effort_shift],
     );
 
+    // Test button
+    let test_focused = app.cfg_focus == ConfigFocus::TestBtn;
+    let test_style = if test_focused {
+        selected_style(Color::Cyan)
+    } else {
+        dim_style(Color::DarkGray)
+    };
+    let test_text = if test_focused {
+        "[ 测试模型 ]"
+    } else {
+        "  测试模型  "
+    };
+    f.render_widget(
+        Paragraph::new(test_text)
+            .style(test_style)
+            .alignment(Alignment::Center),
+        chunks[11 - effort_shift],
+    );
+
+    // Test status line
+    let status_text = match &app.cfg_test_status {
+        TestStatus::Idle => String::new(),
+        TestStatus::Testing => "⏳ 正在测试模型调用...".to_string(),
+        TestStatus::Done { ok, message } => {
+            if *ok {
+                format!("✓ 测试成功，模型回复：{message}")
+            } else {
+                format!("✗ 测试失败：{message}")
+            }
+        }
+    };
+    let status_color = match &app.cfg_test_status {
+        TestStatus::Testing => Color::Yellow,
+        TestStatus::Done { ok, .. } if *ok => Color::Green,
+        TestStatus::Done { .. } => Color::Red,
+        TestStatus::Idle => Color::DarkGray,
+    };
+    if !status_text.is_empty() {
+        f.render_widget(
+            Paragraph::new(status_text)
+                .style(Style::default().fg(status_color))
+                .alignment(Alignment::Center),
+            chunks[12 - effort_shift],
+        );
+    }
+
     f.render_widget(
         Paragraph::new("↑↓ 切换  Space 勾选  Enter 确认  ESC 返回")
             .style(Style::default().fg(Color::DarkGray))
             .alignment(Alignment::Center),
-        chunks[12 - effort_shift],
+        chunks[14 - effort_shift],
     );
 }
 
