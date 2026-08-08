@@ -752,16 +752,6 @@ impl App {
         let tx = self.tx.clone();
         let token = CancellationToken::new();
 
-        tracing::info!(
-            "测试模型调用: url={}, model={}, format={:?}, thinking={}, key前8={}... 长度={}",
-            cfg.base_url,
-            cfg.model,
-            cfg.api_format,
-            cfg.enable_thinking,
-            &cfg.api_key[..cfg.api_key.len().min(8)],
-            cfg.api_key.len(),
-        );
-
         match cfg.api_format {
             crate::config::ApiFormat::OpenAi => {
                 let client = crate::llm::OpenAiClient::new(&cfg);
@@ -782,15 +772,12 @@ impl App {
                     // 忽略中间的思考/内容增量，只看最终结果
                     LlmChunk::Thinking(_) | LlmChunk::Content(_) => {}
                     LlmChunk::Done(text) => {
-                        tracing::info!("测试模型完成，模型回复原文: {:?}", text);
                         if parse_answer(&text).is_some() {
-                            tracing::info!("测试模型解析成功");
                             let _ = tx.send(AppEvent::LlmTestResult {
                                 ok: true,
                                 message: text,
                             });
                         } else {
-                            tracing::warn!("测试模型解析失败（回复不含 1-4 序号）");
                             let _ = tx.send(AppEvent::LlmTestResult {
                                 ok: false,
                                 message: format!("模型回复无法解析为 1-4 序号: {text}"),
@@ -799,7 +786,6 @@ impl App {
                         return;
                     }
                     LlmChunk::Error(msg) => {
-                        tracing::warn!("测试模型请求出错: {}", msg);
                         let _ = tx.send(AppEvent::LlmTestResult {
                             ok: false,
                             message: msg,
