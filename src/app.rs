@@ -151,7 +151,10 @@ pub enum AppEvent {
     },
     Fail(String),
     /// 配置页测试模型调用的结果（不进入答题事件守卫，配置页可见）
-    LlmTestResult { ok: bool, message: String },
+    LlmTestResult {
+        ok: bool,
+        message: String,
+    },
 }
 
 #[derive(Debug, Clone)]

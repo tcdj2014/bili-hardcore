@@ -136,6 +136,20 @@ impl App {
             KeyCode::Left => {
                 if self.cfg_focus == ConfigFocus::ThinkingEffort {
                     self.cfg_effort = (self.cfg_effort + 2) % 3; // decrement with wrap
+                } else if matches!(
+                    self.cfg_focus,
+                    ConfigFocus::SaveBtn
+                        | ConfigFocus::TemplateBtn
+                        | ConfigFocus::ResetBtn
+                        | ConfigFocus::TestBtn
+                ) {
+                    self.cfg_focus = match self.cfg_focus {
+                        ConfigFocus::SaveBtn => ConfigFocus::TestBtn,
+                        ConfigFocus::TemplateBtn => ConfigFocus::SaveBtn,
+                        ConfigFocus::ResetBtn => ConfigFocus::TemplateBtn,
+                        ConfigFocus::TestBtn => ConfigFocus::ResetBtn,
+                        _ => unreachable!(),
+                    };
                 } else if let Some(idx) = field_idx
                     && self.cfg_cursors[idx] > 0
                 {
@@ -145,6 +159,20 @@ impl App {
             KeyCode::Right => {
                 if self.cfg_focus == ConfigFocus::ThinkingEffort {
                     self.cfg_effort = (self.cfg_effort + 1) % 3;
+                } else if matches!(
+                    self.cfg_focus,
+                    ConfigFocus::SaveBtn
+                        | ConfigFocus::TemplateBtn
+                        | ConfigFocus::ResetBtn
+                        | ConfigFocus::TestBtn
+                ) {
+                    self.cfg_focus = match self.cfg_focus {
+                        ConfigFocus::SaveBtn => ConfigFocus::TemplateBtn,
+                        ConfigFocus::TemplateBtn => ConfigFocus::ResetBtn,
+                        ConfigFocus::ResetBtn => ConfigFocus::TestBtn,
+                        ConfigFocus::TestBtn => ConfigFocus::SaveBtn,
+                        _ => unreachable!(),
+                    };
                 } else if let Some(idx) = field_idx
                     && self.cfg_cursors[idx] < self.cfg_fields[idx].len()
                 {
@@ -166,10 +194,11 @@ impl App {
                     }
                     ConfigFocus::ThinkingEffort => ConfigFocus::FastModeToggle,
                     ConfigFocus::FastModeToggle => ConfigFocus::SaveBtn,
-                    ConfigFocus::SaveBtn => ConfigFocus::TemplateBtn,
-                    ConfigFocus::TemplateBtn => ConfigFocus::ResetBtn,
-                    ConfigFocus::ResetBtn => ConfigFocus::TestBtn,
-                    ConfigFocus::TestBtn => ConfigFocus::BaseUrl,
+                    // 按钮组内部不靠 Down 切换（用 Left/Right），Down 直达 BaseUrl 环回
+                    ConfigFocus::SaveBtn
+                    | ConfigFocus::TemplateBtn
+                    | ConfigFocus::ResetBtn
+                    | ConfigFocus::TestBtn => ConfigFocus::BaseUrl,
                 };
             }
             KeyCode::Up => {
@@ -187,10 +216,11 @@ impl App {
                     }
                     ConfigFocus::ThinkingEffort => ConfigFocus::ThinkingToggle,
                     ConfigFocus::ThinkingToggle => ConfigFocus::FormatToggle,
-                    ConfigFocus::SaveBtn => ConfigFocus::FastModeToggle,
-                    ConfigFocus::TemplateBtn => ConfigFocus::SaveBtn,
-                    ConfigFocus::ResetBtn => ConfigFocus::TemplateBtn,
-                    ConfigFocus::TestBtn => ConfigFocus::ResetBtn,
+                    // 按钮组内部不靠 Up 切换，Up 统一回到 FastModeToggle
+                    ConfigFocus::SaveBtn
+                    | ConfigFocus::TemplateBtn
+                    | ConfigFocus::ResetBtn
+                    | ConfigFocus::TestBtn => ConfigFocus::FastModeToggle,
                 };
             }
             KeyCode::Char(' ')

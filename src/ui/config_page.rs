@@ -71,10 +71,7 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
     }
     layout_constraints.extend_from_slice(&[
         Constraint::Length(3), // Fast mode toggle
-        Constraint::Length(2), // Save
-        Constraint::Length(2), // Template
-        Constraint::Length(2), // Reset
-        Constraint::Length(2), // Test button
+        Constraint::Length(2), // Buttons row (Save/Template/Reset/Test horizontal)
         Constraint::Length(1), // Test status line
         Constraint::Min(1),    // spacer
         Constraint::Length(1), // help
@@ -253,81 +250,83 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
         fast_inner,
     );
 
-    // Save button
-    let save_focused = app.cfg_focus == ConfigFocus::SaveBtn;
-    let save_style = if save_focused {
-        selected_style(Color::Green)
-    } else {
-        dim_style(Color::DarkGray)
-    };
-    let save_text = if save_focused {
-        "[ 保存 ]"
-    } else {
-        "  保存  "
-    };
-    f.render_widget(
-        Paragraph::new(save_text)
-            .style(save_style)
-            .alignment(Alignment::Center),
-        chunks[8 - effort_shift],
-    );
-
-    // Template button
-    let tpl_focused = app.cfg_focus == ConfigFocus::TemplateBtn;
-    let tpl_style = if tpl_focused {
-        selected_style(Color::Cyan)
-    } else {
-        dim_style(Color::DarkGray)
-    };
-    let tpl_text = if tpl_focused {
-        "[ 选择预设模板 ]"
-    } else {
-        "  选择预设模板  "
-    };
-    f.render_widget(
-        Paragraph::new(tpl_text)
-            .style(tpl_style)
-            .alignment(Alignment::Center),
-        chunks[9 - effort_shift],
-    );
-
-    // Reset button
-    let reset_focused = app.cfg_focus == ConfigFocus::ResetBtn;
-    let reset_style = if reset_focused {
-        selected_style(Color::Red)
-    } else {
-        dim_style(Color::DarkGray)
-    };
-    let reset_text = if reset_focused {
-        "[ 重置 ]"
-    } else {
-        "  重置  "
-    };
-    f.render_widget(
-        Paragraph::new(reset_text)
-            .style(reset_style)
-            .alignment(Alignment::Center),
-        chunks[10 - effort_shift],
-    );
-
-    // Test button
-    let test_focused = app.cfg_focus == ConfigFocus::TestBtn;
-    let test_style = if test_focused {
-        selected_style(Color::Cyan)
-    } else {
-        dim_style(Color::DarkGray)
-    };
-    let test_text = if test_focused {
-        "[ 测试模型 ]"
-    } else {
-        "  测试模型  "
-    };
-    f.render_widget(
-        Paragraph::new(test_text)
-            .style(test_style)
-            .alignment(Alignment::Center),
-        chunks[11 - effort_shift],
-    );
+    // Buttons row: Save / Template / Reset / Test (horizontal)
+    {
+        let btn_chunks =
+            Layout::horizontal([Constraint::Percentage(25); 4]).split(chunks[8 - effort_shift]);
+        // Save
+        let save_focused = app.cfg_focus == ConfigFocus::SaveBtn;
+        let save_style = if save_focused {
+            selected_style(Color::Green)
+        } else {
+            dim_style(Color::DarkGray)
+        };
+        let save_text = if save_focused {
+            "[ 保存 ]"
+        } else {
+            "  保存  "
+        };
+        f.render_widget(
+            Paragraph::new(save_text)
+                .style(save_style)
+                .alignment(Alignment::Center),
+            btn_chunks[0],
+        );
+        // Template
+        let tpl_focused = app.cfg_focus == ConfigFocus::TemplateBtn;
+        let tpl_style = if tpl_focused {
+            selected_style(Color::Cyan)
+        } else {
+            dim_style(Color::DarkGray)
+        };
+        let tpl_text = if tpl_focused {
+            "[ 模板 ]"
+        } else {
+            "  模板  "
+        };
+        f.render_widget(
+            Paragraph::new(tpl_text)
+                .style(tpl_style)
+                .alignment(Alignment::Center),
+            btn_chunks[1],
+        );
+        // Reset
+        let reset_focused = app.cfg_focus == ConfigFocus::ResetBtn;
+        let reset_style = if reset_focused {
+            selected_style(Color::Red)
+        } else {
+            dim_style(Color::DarkGray)
+        };
+        let reset_text = if reset_focused {
+            "[ 重置 ]"
+        } else {
+            "  重置  "
+        };
+        f.render_widget(
+            Paragraph::new(reset_text)
+                .style(reset_style)
+                .alignment(Alignment::Center),
+            btn_chunks[2],
+        );
+        // Test
+        let test_focused = app.cfg_focus == ConfigFocus::TestBtn;
+        let test_style = if test_focused {
+            selected_style(Color::Cyan)
+        } else {
+            dim_style(Color::DarkGray)
+        };
+        let test_text = if test_focused {
+            "[ 测试 ]"
+        } else {
+            "  测试  "
+        };
+        f.render_widget(
+            Paragraph::new(test_text)
+                .style(test_style)
+                .alignment(Alignment::Center),
+            btn_chunks[3],
+        );
+    }
 
     // Test status line
     let status_text = match &app.cfg_test_status {
@@ -352,15 +351,15 @@ pub fn draw(f: &mut ratatui::Frame, app: &App) {
             Paragraph::new(status_text)
                 .style(Style::default().fg(status_color))
                 .alignment(Alignment::Center),
-            chunks[12 - effort_shift],
+            chunks[9 - effort_shift],
         );
     }
 
     f.render_widget(
-        Paragraph::new("↑↓ 切换  Space 勾选  Enter 确认  ESC 返回")
+        Paragraph::new("↑↓ 切换  ←→ 按钮间切换  Space 勾选  Enter 确认  ESC 返回")
             .style(Style::default().fg(Color::DarkGray))
             .alignment(Alignment::Center),
-        chunks[14 - effort_shift],
+        chunks[11 - effort_shift],
     );
 }
 
