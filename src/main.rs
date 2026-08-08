@@ -90,6 +90,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             enable_thinking: false,
             reasoning_effort: "high".to_string(),
             enable_fast_mode: false,
+            api_format: Default::default(),
         }),
         _ => None,
     };
