@@ -55,10 +55,10 @@
     },
     {
         "provider": "qwen-anthropic",
-        "provider_name": "千问 (Anthropic 兼容)",
+        "provider_name": "阿里百炼 (Anthropic 兼容)",
         "config": {
             "format": "anthropic",
-            "base_url": "https://dashscope.aliyuncs.com/compatible-mode",
+            "base_url": "https://dashscope.aliyuncs.com/apps/anthropic",
             "model": "qwen-plus"
         }
     }
