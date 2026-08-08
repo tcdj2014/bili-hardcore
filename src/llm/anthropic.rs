@@ -110,6 +110,24 @@ impl AnthropicClient {
                 return;
             }
 
+            // 检查响应是否为 SSE 流。某些 Anthropic 兼容端点在 URL 错误或鉴权失败时
+            // 会返回 HTTP 200 + JSON 错误体（content-type: application/json），
+            // 而非 text/event-stream。此时按 SSE 解析会得到空内容，需显式报错。
+            let content_type = resp
+                .headers()
+                .get("content-type")
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or("");
+            if !content_type.contains("text/event-stream") {
+                let body_text = resp.text().await.unwrap_or_default();
+                let preview = &body_text[..body_text.len().min(300)];
+                let _ = tx.send(LlmChunk::Error(format!(
+                    "服务端未返回流式响应（content-type: {}），请检查 API URL 是否为完整的 /v1/messages 端点。响应: {}",
+                    content_type, preview
+                )));
+                return;
+            }
+
             let mut stream = resp.bytes_stream().eventsource();
             let mut full_content = String::new();
 
