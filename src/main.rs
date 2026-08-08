@@ -47,7 +47,7 @@ enum Commands {
     Uninstall,
 }
 
-#[cfg(debug_assertions)]
+// 临时：release 也启用日志，用于排查测试模型问题。排查后恢复 cfg 守卫。
 fn setup_logging() -> Result<tracing_appender::non_blocking::WorkerGuard, Box<dyn std::error::Error>>
 {
     let log_dir = std::path::Path::new("./logs");
@@ -64,11 +64,6 @@ fn setup_logging() -> Result<tracing_appender::non_blocking::WorkerGuard, Box<dy
         ))
         .init();
     Ok(guard)
-}
-
-#[cfg(not(debug_assertions))]
-fn setup_logging() -> Result<(), Box<dyn std::error::Error>> {
-    Ok(())
 }
 
 #[tokio::main]
